@@ -1,7 +1,6 @@
 #include <stdio.h>
-#include <string.h>
+#include <bsd/string.h>
 #include <stdbool.h>
-
 #define MAX 9
 #define SIZE 50
 
@@ -21,7 +20,6 @@ int preferences[MAX][MAX];
 int pair_count;
 int candidate_count;
 
-
 bool vote(int rank, char name[SIZE], int ranks[]);
 void record_preferences(int ranks[]);
 void add_pairs(void);
@@ -37,7 +35,6 @@ int main(int argc, char *argv[])
         printf("Usage: tideman [candidate ...]\n");
         return 1;
     }
-
     // Initializing array of candidates
     candidate_count = argc - 1;
     if (candidate_count > MAX)
@@ -47,7 +44,7 @@ int main(int argc, char *argv[])
     }
     for (int i = 0; i < candidate_count; i++)
     {
-        strcpy(candidates[i], argv[i + 1]);
+        strlcpy(candidates[i], argv[i + 1],sizeof(candidates));
     }
 
     // Clearing graph of locked in pairs
@@ -83,12 +80,9 @@ int main(int argc, char *argv[])
                 return 3;
             }
         }
-
         record_preferences(ranks);
-
         printf("\n");
     }
-
     add_pairs();
     sort_pairs();
     lock_pairs();
@@ -146,30 +140,21 @@ void add_pairs(void)
 // Sort pairs in decreasing order by strength of victory
 void sort_pairs(void)
 {
-    // sort pairs in ascending order by strength
-    for (int i = 1; i < pair_count; i++) {
-        pair key = pairs[i];
-        int j = i-1;
-        while (j >= 0 && preferences[pairs[j].winner][pairs[j].loser] > preferences[key.winner][key.loser])
-        {
-            pairs[j+1] = pairs[j];
-            j = j-1;
-        }
-        pairs[j+1] = key;
-    }
-    return;
-
-    // move pairs in descending order by strength
-    pair tempPairs[pair_count];
-    for (int i = 0; i < pair_count; i++)
+  for (int i = 0; i < pair_count; i++)
+  {
+    int max = i;
+    for (int j = i + 1; j < pair_count; j++)
     {
-        tempPairs[i] = pairs[pair_count - i - 1];
+       if (preferences[pairs[j].winner][pairs[j].loser] > preferences[pairs[max].winner][pairs[max].loser])
+       {
+         max = j;
+       }
     }
-
-    for (int i = 0; i < pair_count; i++)
-    {
-        pairs[i] = tempPairs[i];
-    }
+    pair temp = pairs[i];
+    pairs[i] = pairs[max];
+    pairs[max] = temp;
+  }
+  return;
 }
 
 bool is_circle(int loser, int winner)
@@ -178,7 +163,6 @@ bool is_circle(int loser, int winner)
     if (loser == winner) {
         return true; // it forms a cycle
     }
-
     for (int i = 0; i < candidate_count; i++)
     {
         if(locked[loser][i]) //check if loser is locked with a candidate
@@ -186,7 +170,6 @@ bool is_circle(int loser, int winner)
             return is_circle(i, winner); // check if that candidate is locked with  winner
         }
     }
-
     return false;
 }
 
@@ -203,8 +186,6 @@ void lock_pairs(void)
     }
     return;
 }
-
-
 
 // Print the winner of the election
 void print_winner(void)
